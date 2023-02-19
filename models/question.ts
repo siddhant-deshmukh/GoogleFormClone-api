@@ -2,6 +2,7 @@ import mongoose, { Date } from "mongoose";
 import { IMongooseObjectId } from "../types";
 
 export interface IQuestion {
+    formId: IMongooseObjectId,
     required: boolean,
     title: string,
     desc?: string,
@@ -13,6 +14,7 @@ export interface IQuestionStored extends IQuestion {
     correct_ans?: string[]
 }
 const questionSchema = new mongoose.Schema<IQuestionStored>({
+    formId: {type: mongoose.SchemaTypes.ObjectId,required:true},
     required: { type: Boolean, required: true, default: true },
     title: { type: String, required: true, maxLength: 150 },
     desc: { type: String, maxLength: 150 },
@@ -21,6 +23,8 @@ const questionSchema = new mongoose.Schema<IQuestionStored>({
     correct_ans:[{type:String,maxlength:50}],
     point:{type:Number,min:0,max:100}
 })
-questionSchema.path('optionsArray').validate((val: IMongooseObjectId[]) => { return val.length < 100 }, 'question can have 100 options at max')
+questionSchema.path('optionsArray').validate((val: IMongooseObjectId[]) => { return val.length < 20 }, 'question can have 100 options at max')
+questionSchema.path('correct_ans').validate((val: IMongooseObjectId[]) => { return val.length < 20 }, 'question can have 100 options at max')
 
-export default mongoose.model<IQuestion>("Form", questionSchema)
+const Question = mongoose.model<IQuestionStored>("Question", questionSchema);
+export default Question

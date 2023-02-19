@@ -9,10 +9,10 @@ export interface IForm {
     desc?: string,
     starttime?: Date,
     endtime?: Date,
-    questions: IQuestion[]
+    questions: IMongooseObjectId[]
 }
 export interface IFormStored extends IForm {
-    settings: {
+    settings?: {
 
     }
 }
@@ -26,6 +26,6 @@ const formSchema = new mongoose.Schema<IFormStored>({
     starttime: { type: Date },
     endtime: { type: Date },
 })
-formSchema.path('questions').validate((val: IMongooseObjectId[]) => { return val.length < 20 }, 'form can have 20 questions at max')
+formSchema.path('questions').validate((val: IMongooseObjectId[]) => { return val.length <= 21 }, 'form can have 20 questions at max')
 
-export default mongoose.model<IFormStored>("Form", formSchema)
+export default mongoose.model<IFormStored>("Form", formSchema);

@@ -19,21 +19,25 @@ router.post('/register',
   body('name').isString().isLength({max:50,min:3}).trim(),
   body('password').isString().isLength({max:30,min:5}).trim(), 
   async function(req : Request, res : Response, next : NextFunction) {
-    const {email,name,password} : {email:string,name:string,password:string}  = req.body;
-    const checkEmail = await User.findOne({email});
-    if(checkEmail) return res.status(409).json({msg:'User already exists!'});
+    try{
+      const {email,name,password} : {email:string,name:string,password:string}  = req.body;
+      const checkEmail = await User.findOne({email});
+      if(checkEmail) return res.status(409).json({msg:'User already exists!'});
 
-    const encryptedPassword = await bcrypt.hash(password,15)
+      const encryptedPassword = await bcrypt.hash(password,15)
 
-    const newUser : IUserStored = await User.create({
-      email,
-      name,
-      password : encryptedPassword,
-    })
-    
-    const token = jwt.sign({_id:newUser._id.toString(),email},process.env.TOKEN_KEY || 'zhingalala',{expiresIn:'2h'})
-    res.cookie("GoogleFormClone_acesstoken",token)
-    return res.status(201).json({token})
+      const newUser : IUserStored = await User.create({
+        email,
+        name,
+        password : encryptedPassword,
+      })
+      
+      const token = jwt.sign({_id:newUser._id.toString(),email},process.env.TOKEN_KEY || 'zhingalala',{expiresIn:'2h'})
+      res.cookie("GoogleFormClone_acesstoken",token)
+      return res.status(201).json({token})
+    } catch (err) {
+      return res.status(500).json({msg : 'Some internal error occured',err})
+    }
   }
 );
 router.post('/login-password',
@@ -42,9 +46,11 @@ router.post('/login-password',
   async function(req : Request, res : Response, next : NextFunction) {
     const {email,password} : {email:string,password:string}  = req.body;
     const checkUser = await User.findOne({email});
-    if(!checkUser) return res.status(404).json({msg:'User doesn`t exists!'});
-
     
+    if(!checkUser) return res.status(404).json({msg:'User doesn`t exists!'});
+    if(!checkUser.password) return res.status(405).json({msg:'Try another method'});
+    if(!(await bcrypt.compare(password, checkUser.password))) return res.status(406).json({msg:'Wrong password!'}) ;
+
     const token = jwt.sign({_id:checkUser._id.toString(),email},process.env.TOKEN_KEY || 'zhingalala',{expiresIn:'2h'})
     res.cookie("GoogleFormClone_acesstoken",token)
     return res.status(201).json({token})

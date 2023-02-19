@@ -28,19 +28,24 @@ router.post('/', auth_1.default, function (req, res, next) {
 });
 router.post('/register', (0, express_validator_1.body)('email').isEmail().isLength({ max: 50, min: 3 }).toLowerCase().trim(), (0, express_validator_1.body)('name').isString().isLength({ max: 50, min: 3 }).trim(), (0, express_validator_1.body)('password').isString().isLength({ max: 30, min: 5 }).trim(), function (req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { email, name, password } = req.body;
-        const checkEmail = yield users_1.default.findOne({ email });
-        if (checkEmail)
-            return res.status(409).json({ msg: 'User already exists!' });
-        const encryptedPassword = yield bcryptjs_1.default.hash(password, 15);
-        const newUser = yield users_1.default.create({
-            email,
-            name,
-            password: encryptedPassword,
-        });
-        const token = jsonwebtoken_1.default.sign({ _id: newUser._id.toString(), email }, process.env.TOKEN_KEY || 'zhingalala', { expiresIn: '2h' });
-        res.cookie("GoogleFormClone_acesstoken", token);
-        return res.status(201).json({ token });
+        try {
+            const { email, name, password } = req.body;
+            const checkEmail = yield users_1.default.findOne({ email });
+            if (checkEmail)
+                return res.status(409).json({ msg: 'User already exists!' });
+            const encryptedPassword = yield bcryptjs_1.default.hash(password, 15);
+            const newUser = yield users_1.default.create({
+                email,
+                name,
+                password: encryptedPassword,
+            });
+            const token = jsonwebtoken_1.default.sign({ _id: newUser._id.toString(), email }, process.env.TOKEN_KEY || 'zhingalala', { expiresIn: '2h' });
+            res.cookie("GoogleFormClone_acesstoken", token);
+            return res.status(201).json({ token });
+        }
+        catch (err) {
+            return res.status(500).json({ msg: 'Some internal error occured', err });
+        }
     });
 });
 router.post('/login-password', (0, express_validator_1.body)('email').isEmail().isLength({ max: 50, min: 3 }), (0, express_validator_1.body)('password').isString().isLength({ max: 30, min: 5 }), function (req, res, next) {
@@ -49,6 +54,10 @@ router.post('/login-password', (0, express_validator_1.body)('email').isEmail().
         const checkUser = yield users_1.default.findOne({ email });
         if (!checkUser)
             return res.status(404).json({ msg: 'User doesn`t exists!' });
+        if (!checkUser.password)
+            return res.status(405).json({ msg: 'Try another method' });
+        if (!(yield bcryptjs_1.default.compare(password, checkUser.password)))
+            return res.status(406).json({ msg: 'Wrong password!' });
         const token = jsonwebtoken_1.default.sign({ _id: checkUser._id.toString(), email }, process.env.TOKEN_KEY || 'zhingalala', { expiresIn: '2h' });
         res.cookie("GoogleFormClone_acesstoken", token);
         return res.status(201).json({ token });

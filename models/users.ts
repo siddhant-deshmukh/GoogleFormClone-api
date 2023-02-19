@@ -7,10 +7,10 @@ export interface IUserSnippet {
     bio? : string,
 }
 export interface IUser extends IUserSnippet{
+    _id : IMongooseObjectId,
     forms : IMongooseObjectId[],
 }
 export interface IUserStored extends IUser{
-    _id : IMongooseObjectId,
     email : string,
     password? : string,
     auth_type : string[],
