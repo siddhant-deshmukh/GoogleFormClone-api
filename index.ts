@@ -13,11 +13,12 @@ dotenv.config();
 const app: Express = express();
 const port = process.env.PORT;
 
+app.use(cors({origin:'http://localhost:5173',credentials:true ,optionsSuccessStatus:200}));
+
 app.use(bodyParser.json())
 app.use(
   bodyParser.urlencoded({extended:true})
 );
-app.use(cors({origin:`http://localhost:5173`,optionsSuccessStatus:200}));
 app.use(express.json())
 app.use(cookieParser())
 

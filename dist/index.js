@@ -38,9 +38,9 @@ const formRoutes_1 = __importDefault(require("./routes/formRoutes"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const port = process.env.PORT;
+app.use((0, cors_1.default)({ origin: 'http://localhost:5173', credentials: true, optionsSuccessStatus: 200 }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use((0, cors_1.default)({ origin: `http://localhost:5173`, optionsSuccessStatus: 200 }));
 app.use(express_1.default.json());
 app.use((0, cookie_parser_1.default)());
 mongoose_1.default.connect(process.env.MONGODB_ATLAS_URL)

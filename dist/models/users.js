@@ -11,6 +11,7 @@ const userSchema = new mongoose_1.default.Schema({
     password: { type: String, maxLength: 100, minlength: 5 },
     auth_type: [{ type: String, required: true, enum: ['google', 'github', 'password'] }],
     forms: [{ type: mongoose_1.default.SchemaTypes.ObjectId, ref: 'Forms' }],
+    emailVerfied: { type: Boolean, default: false }
 });
 userSchema.path('forms').validate((val) => { return val.length < 10; }, 'user can have 10 forms at max');
 userSchema.path('auth_type').validate((val) => { return val.length < 3; }, 'user can have 3 authtype at max');

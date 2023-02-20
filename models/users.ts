@@ -9,8 +9,20 @@ export interface IUserSnippet {
 export interface IUser extends IUserSnippet{
     _id : IMongooseObjectId,
     forms : IMongooseObjectId[],
+    emailVerfied:boolean
 }
-export interface IUserStored extends IUser{
+export interface IUserCreate {
+    name : string,
+    bio? : string,
+    emailVerfied:boolean,
+    email : string,
+    password? : string,
+    auth_type : string[],
+}
+export interface IUserStored extends IUserSnippet{
+    _id : IMongooseObjectId,
+    forms : IMongooseObjectId[],
+    emailVerfied:boolean,
     email : string,
     password? : string,
     auth_type : string[],
@@ -23,6 +35,7 @@ const userSchema = new mongoose.Schema<IUserStored>({
     password : {type:String,maxLength:100,minlength:5},
     auth_type : [{type:String,required:true,enum:['google','github','password']}],
     forms : [{type:mongoose.SchemaTypes.ObjectId,ref:'Forms'}],
+    emailVerfied: {type:Boolean,default:false}
 })
 userSchema.path('forms').validate((val:IMongooseObjectId[])=>{return val.length < 10},'user can have 10 forms at max')
 userSchema.path('auth_type').validate((val:string[])=>{return val.length < 3},'user can have 3 authtype at max')
