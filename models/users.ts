@@ -9,7 +9,8 @@ export interface IUserSnippet {
 export interface IUser extends IUserSnippet{
     _id : IMongooseObjectId,
     forms : IMongooseObjectId[],
-    emailVerfied:boolean
+    emailVerfied:boolean,
+    email? : string,
 }
 export interface IUserCreate {
     name : string,

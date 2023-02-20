@@ -49,7 +49,7 @@ const verifyToken = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
             res.clearCookie("access_token");
             return res.status(403).json({ err: "Something is wrong with verification!", user: null });
         }
-        const user = yield users_1.default.findById(decoded._id).select({ 'password': 0, 'email': 0, 'auth_type': 0 });
+        const user = yield users_1.default.findById(decoded._id).select({ 'password': 0, 'auth_type': 0 });
         if (!user) {
             res.clearCookie("access_token");
             return res.status(403).json({ err: "A token is required for authentication", user: null });

@@ -16,7 +16,7 @@ const verifyToken = async (req: Request, res: Response, next: NextFunction) => {
       res.clearCookie("access_token");
       return res.status(403).json({ err: "Something is wrong with verification!", user:null });
     }
-    const user = await User.findById(decoded._id).select({ 'password': 0, 'email': 0, 'auth_type': 0 });
+    const user = await User.findById(decoded._id).select({ 'password': 0,  'auth_type': 0 });
     if (!user) {
       res.clearCookie("access_token");
       return res.status(403).json({ err: "A token is required for authentication", user:null });

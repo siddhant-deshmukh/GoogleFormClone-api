@@ -105,7 +105,7 @@ router.post('/login-google', function (req, res, next) {
             let token = "";
             console.log(checkUser);
             if (checkUser && checkUser.email === email) {
-                if (!('google' in checkUser.auth_type)) {
+                if (checkUser.auth_type.findIndex((ele) => (ele === 'google')) === -1) {
                     checkUser.auth_type = [...checkUser.auth_type, 'google'];
                     yield checkUser.save();
                 }
@@ -195,7 +195,7 @@ router.get('/login-github', function (req, res, next) {
             let token = "";
             console.log(checkUser);
             if (checkUser && checkUser.email === userEmail) {
-                if (!('github' in checkUser.auth_type)) {
+                if (checkUser.auth_type.findIndex((ele) => (ele === 'github')) === -1) {
                     checkUser.auth_type = [...checkUser.auth_type, 'github'];
                     yield checkUser.save();
                 }
