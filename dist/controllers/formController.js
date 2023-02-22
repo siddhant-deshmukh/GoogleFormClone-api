@@ -27,8 +27,8 @@ function createNewForm(req, res, next) {
             if (forms.length > 9)
                 return res.status(403).json({ msg: 'Can not make more than 10 forms' });
             const formCreated = yield form_1.default.create(form);
-            const updatedUser = yield users_1.default.findByIdAndUpdate(_id, {
-                forms: [...forms, formCreated._id]
+            yield users_1.default.findByIdAndUpdate(_id, {
+                forms: [formCreated._id, ...forms]
             });
             const PromiseArray = questions.map((que) => __awaiter(this, void 0, void 0, function* () {
                 try {
@@ -41,10 +41,10 @@ function createNewForm(req, res, next) {
             }));
             const quesIds = yield Promise.all(PromiseArray);
             quesIds.filter(ele => (ele));
-            const updatedForm = yield form_1.default.findByIdAndUpdate(formCreated._id, {
+            yield form_1.default.findByIdAndUpdate(formCreated._id, {
                 questions: quesIds
             });
-            return res.status(201).json({ form: { updatedForm, questions: quesIds }, updatedUser });
+            return res.status(201).json({ formId: formCreated._id });
         }
         catch (err) {
             return res.status(500).json({ msg: 'Some internal error occured', err });
@@ -54,101 +54,118 @@ function createNewForm(req, res, next) {
 exports.createNewForm = createNewForm;
 function getForm(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { formId } = req.params;
-        const { _id, forms } = res.user;
-        const oldForm = yield form_1.default.findById(formId);
-        if (!oldForm)
-            return res.status(404).json({ msg: 'form not found' });
-        let queListPromises = oldForm.questions.map((queId) => __awaiter(this, void 0, void 0, function* () {
-            try {
-                if (oldForm.author === _id)
-                    return (yield question_1.default.findById(queId));
-                else
-                    return (yield question_1.default.findById(queId).select({ correct_ans: 0 }));
+        try {
+            const { formId } = req.params;
+            const { withQuestions } = req.query;
+            const { _id, forms } = res.user;
+            const oldForm = yield form_1.default.findById(formId);
+            if (!oldForm)
+                return res.status(404).json({ msg: 'form not found' });
+            let queListPromises = oldForm.questions.map((queId) => __awaiter(this, void 0, void 0, function* () {
+                try {
+                    if (oldForm.author === _id)
+                        return (yield question_1.default.findById(queId));
+                    else
+                        return (yield question_1.default.findById(queId).select({ correct_ans: 0 }));
+                }
+                catch (_a) {
+                    return null;
+                }
+            }));
+            // console.log(withQuestions)
+            if (withQuestions === "true") {
+                let queList = yield Promise.all(queListPromises);
+                queList = queList.filter(ele => (!(ele === null)));
+                const questions = {};
+                queList.forEach(que => {
+                    questions[que === null || que === void 0 ? void 0 : que._id.toString()] = que;
+                });
+                return res.status(201).json({ form: oldForm, questions });
             }
-            catch (_a) {
-                return null;
+            else {
+                return res.status(201).json({ form: oldForm });
             }
-        }));
-        let queList = yield Promise.all(queListPromises);
-        queList = queList.filter(ele => (!(ele === null)));
-        return res.status(201).json({ oldForm, questions: queList });
+        }
+        catch (err) {
+            return res.status(500).json({ msg: 'Some internal error occured', err });
+        }
     });
 }
 exports.getForm = getForm;
 function editForm(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
-        // try {
-        const { _id } = res.user;
-        const { formId } = req.params;
-        const oldForm = yield form_1.default.findById(formId);
-        if (!oldForm)
-            return res.status(404).json({ msg: 'form not found' });
-        if (oldForm.author.toString() !== _id.toString())
-            return res.status(401).json({ msg: 'Unauthorized' });
-        let newForm = {};
-        const { title, desc, starttime, endtime } = req.body;
-        if (title)
-            newForm = Object.assign(Object.assign({}, newForm), { title });
-        if (desc)
-            newForm = Object.assign(Object.assign({}, newForm), { desc });
-        if (starttime && endtime)
-            newForm = Object.assign(Object.assign({}, newForm), { title, starttime, endtime });
-        const { questions, delete_questions, new_questions } = req.body;
-        let count = 0;
-        questions.forEach((element, index) => {
-            if (element === null && count < new_questions.length) {
-                questions[index] = count;
-                count += 1;
-            }
-        });
-        // console.log(" Questions : ",questions)
-        const PromiseArray = questions.map((que) => __awaiter(this, void 0, void 0, function* () {
-            try {
-                if (typeof que === 'string')
-                    return que;
-                else if (typeof que === 'number') {
-                    let que_ = new_questions[que];
-                    let newQue = yield question_1.default.create(Object.assign(Object.assign({}, que_), { formId }));
-                    return newQue._id;
+        try {
+            const { _id } = res.user;
+            const { formId } = req.params;
+            const oldForm = yield form_1.default.findById(formId);
+            if (!oldForm)
+                return res.status(404).json({ msg: 'form not found' });
+            if (oldForm.author.toString() !== _id.toString())
+                return res.status(401).json({ msg: 'Unauthorized' });
+            let newForm = {};
+            const { title, desc, starttime, endtime } = req.body;
+            if (title)
+                newForm = Object.assign(Object.assign({}, newForm), { title });
+            if (desc)
+                newForm = Object.assign(Object.assign({}, newForm), { desc });
+            if (starttime && endtime)
+                newForm = Object.assign(Object.assign({}, newForm), { title, starttime, endtime });
+            const { questions, new_questions } = req.body;
+            let count = 0;
+            questions.forEach((element, index) => {
+                if (element === null && count < new_questions.length) {
+                    questions[index] = count;
+                    count += 1;
                 }
-                else
+            });
+            console.log(" Questions : ", questions);
+            console.log(" new questions", new_questions);
+            const PromiseArray = questions.map((que) => __awaiter(this, void 0, void 0, function* () {
+                try {
+                    console.log("Type que", typeof que);
+                    if (typeof que === 'string')
+                        return que;
+                    else if (typeof que === 'number') {
+                        let que_ = new_questions[que];
+                        console.log(que_);
+                        let newQue = yield question_1.default.create(Object.assign(Object.assign({}, que_), { formId }));
+                        return newQue._id;
+                    }
+                    else
+                        return null;
+                }
+                catch (_a) {
                     return null;
-            }
-            catch (_a) {
-                return null;
-            }
-        }));
-        let quesIds = yield Promise.all(PromiseArray);
-        quesIds = quesIds.filter(ele => (!(ele === null)));
-        // console.log(quesIds)
-        // console.log( "Old Form", oldForm.questions)
-        const deleteQueList = [];
-        oldForm.questions.forEach((oldQueId) => {
-            if (!(quesIds.includes(oldQueId.toString()))) {
-                // console.log(oldQueId.toString() in quesIds,oldQueId.toString(),quesIds)
-                deleteQueList.push(oldQueId);
-            }
-        });
-        // console.log("Delete Que list",deleteQueList)
-        const delPromiseArray = deleteQueList.map((que) => __awaiter(this, void 0, void 0, function* () {
-            try {
-                const a = yield question_1.default.findByIdAndDelete(que);
-            }
-            catch (_b) {
-                return null;
-            }
-        }));
-        Promise.all(delPromiseArray);
-        // console.log(formId , {
-        //   ...newForm,
-        //   questions: quesIds
-        // })
-        yield form_1.default.findByIdAndUpdate(formId, Object.assign(Object.assign({}, newForm), { questions: quesIds }));
-        return res.status(201).json(Object.assign(Object.assign({}, newForm), { questions: quesIds }));
-        // } catch (err) {
-        //   return res.status(500).json({ msg: 'Some internal error occured', err })
-        // }
+                }
+            }));
+            let quesIds = yield Promise.all(PromiseArray);
+            quesIds = quesIds.filter(ele => (!(ele === null)));
+            console.log(quesIds);
+            console.log("Old Form", oldForm.questions);
+            const deleteQueList = [];
+            oldForm.questions.forEach((oldQueId) => {
+                if (!(quesIds.includes(oldQueId.toString()))) {
+                    // console.log(oldQueId.toString() in quesIds,oldQueId.toString(),quesIds)
+                    deleteQueList.push(oldQueId);
+                }
+            });
+            console.log("Delete Que list", deleteQueList);
+            const delPromiseArray = deleteQueList.map((que) => __awaiter(this, void 0, void 0, function* () {
+                try {
+                    const a = yield question_1.default.findByIdAndDelete(que);
+                }
+                catch (_b) {
+                    return null;
+                }
+            }));
+            Promise.all(delPromiseArray);
+            console.log(formId, Object.assign(Object.assign({}, newForm), { questions: quesIds }));
+            yield form_1.default.findByIdAndUpdate(formId, Object.assign(Object.assign({}, newForm), { questions: quesIds }));
+            return res.status(201).json(Object.assign(Object.assign({}, newForm), { questions: quesIds }));
+        }
+        catch (err) {
+            return res.status(500).json({ msg: 'Some internal error occured', err });
+        }
     });
 }
 exports.editForm = editForm;

@@ -11,6 +11,7 @@ export interface IQuestion {
     point?:number 
 }
 export interface IQuestionStored extends IQuestion {
+    _id : IMongooseObjectId,
     correct_ans?: string[]
 }
 const questionSchema = new mongoose.Schema<IQuestionStored>({
