@@ -241,4 +241,5 @@ router.get('/logout',async function(req : Request, res : Response, next : NextFu
     return res.status(500).json({msg : 'Some internal error occured',err})
   }
 })
+
 export default router

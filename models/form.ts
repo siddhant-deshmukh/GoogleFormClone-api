@@ -12,6 +12,8 @@ export interface IForm {
     questions: IMongooseObjectId[]
 }
 export interface IFormStored extends IForm {
+    _id: IMongooseObjectId ,
+    formResSummery: IMongooseObjectId,
     settings?: {
 
     }
@@ -23,6 +25,7 @@ const formSchema = new mongoose.Schema<IFormStored>({
     desc: { type: String, maxLength: 150 },
     author: { type: mongoose.SchemaTypes.ObjectId, required: true },
     questions: [{type : mongoose.SchemaTypes.ObjectId,ref:'Question'}],
+    formResSummery: {type : mongoose.SchemaTypes.ObjectId, ref:'ResSummery'},
     starttime: { type: Date },
     endtime: { type: Date },
 })
