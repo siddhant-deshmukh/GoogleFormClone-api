@@ -4,17 +4,13 @@ import { IMongooseObjectId } from "../types";
 export interface IRes_b {
     userId : IMongooseObjectId,
     formId : IMongooseObjectId,
-    mcq_res? : {
-        [ questionId : string ] : string[]
-    },
-    text_res? : {
-        [ questionId : string ] : string
-    },
-    createdAt : Date,
+    mcq_res? : Map<string,string[]>,
+    text_res? : Map<string,string>,
     result? : number
 }
 export interface IRes extends IRes_b{
-    _id : IMongooseObjectId
+    _id : IMongooseObjectId,
+    createdAt : Date,
 }
 
 const resSchema = new mongoose.Schema<IRes>({

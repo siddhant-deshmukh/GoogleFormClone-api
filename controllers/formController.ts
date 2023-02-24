@@ -163,19 +163,20 @@ export async function getForm(req: Request, res: Response) {
     const oldForm: IFormStored | null = await Form.findById(formId)
     if (!oldForm) return res.status(404).json({ msg: 'form not found' })
 
-    let queListPromises = oldForm.questions.map(async (queId) => {
-      try {
-        if (oldForm.author === _id) return (await Question.findById(queId)) as IQuestionStored | null
-        else return (await Question.findById(queId).select({ correct_ans: 0 })) as IQuestionStored | null
-      } catch {
-        return null;
-      }
-    })
     // console.log(withQuestions)
     if (withQuestions === "true") {
+      const questions: { [key: string]: IQuestionStored } = {}
+
+      let queListPromises = oldForm.questions.map(async (queId) => {
+        try {
+          if (oldForm.author === _id) return (await Question.findById(queId)) as IQuestionStored | null
+          else return (await Question.findById(queId).select({ correct_ans: 0 })) as IQuestionStored | null
+        } catch {
+          return null;
+        }
+      })
       let queList = await Promise.all(queListPromises)
       queList = queList.filter(ele => (!(ele === null)))
-      const questions: { [key: string]: IQuestionStored } = {}
       queList.forEach(que => {
         questions[que?._id.toString() as string] = que as IQuestionStored
       })

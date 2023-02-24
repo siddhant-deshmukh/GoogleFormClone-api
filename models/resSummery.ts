@@ -4,14 +4,8 @@ import { IMongooseObjectId } from "../types";
 export interface IResSummery_b {
     userId : IMongooseObjectId,
     formId : IMongooseObjectId,
-    mcq_res_summery : {
-        [ questionId : string ] : {
-            [ option : string ] : number
-        }
-    },
-    text_res_summery : {
-        [ questionId : string ] : number
-    },
+    mcq_res_summery :  Map<string,Map<string,number>>,
+    text_res_summery : Map<string,number>,
 }
 export interface IResSummery extends IResSummery_b{
     _id : IMongooseObjectId

@@ -9,6 +9,7 @@ const formSchema = new mongoose_1.default.Schema({
     desc: { type: String, maxLength: 150 },
     author: { type: mongoose_1.default.SchemaTypes.ObjectId, required: true },
     questions: [{ type: mongoose_1.default.SchemaTypes.ObjectId, ref: 'Question' }],
+    formResSummery: { type: mongoose_1.default.SchemaTypes.ObjectId, ref: 'ResSummery' },
     starttime: { type: Date },
     endtime: { type: Date },
 });

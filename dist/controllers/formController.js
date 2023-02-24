@@ -44,16 +44,19 @@ function createNewForm(req, res) {
                     forms: [formCreated._id, ...forms]
                 });
                 const newQue = yield question_1.default.create(Object.assign(Object.assign({}, defaultQuestion), { formId: formCreated._id }));
-                yield form_1.default.findByIdAndUpdate(formCreated._id, {
-                    questions: newQue._id
-                });
-                yield resSummery_1.default.create({
+                const resSummery = yield resSummery_1.default.create({
                     formId: formCreated._id,
                     userId: _id,
+                    mcq_res_summery: {},
+                    text_res_summery: {}
+                });
+                yield form_1.default.findByIdAndUpdate(formCreated._id, {
+                    questions: newQue._id,
+                    formResSummery: resSummery._id,
                 });
                 yield session.commitTransaction();
                 session.endSession();
-                return res.status(201).json({ formId: formCreated._id });
+                return res.status(201).json({ formId: formCreated._id, resSummery, newQue });
             }
             catch (error) {
                 yield session.abortTransaction();
@@ -165,22 +168,22 @@ function getForm(req, res) {
             const oldForm = yield form_1.default.findById(formId);
             if (!oldForm)
                 return res.status(404).json({ msg: 'form not found' });
-            let queListPromises = oldForm.questions.map((queId) => __awaiter(this, void 0, void 0, function* () {
-                try {
-                    if (oldForm.author === _id)
-                        return (yield question_1.default.findById(queId));
-                    else
-                        return (yield question_1.default.findById(queId).select({ correct_ans: 0 }));
-                }
-                catch (_a) {
-                    return null;
-                }
-            }));
             // console.log(withQuestions)
             if (withQuestions === "true") {
+                const questions = {};
+                let queListPromises = oldForm.questions.map((queId) => __awaiter(this, void 0, void 0, function* () {
+                    try {
+                        if (oldForm.author === _id)
+                            return (yield question_1.default.findById(queId));
+                        else
+                            return (yield question_1.default.findById(queId).select({ correct_ans: 0 }));
+                    }
+                    catch (_a) {
+                        return null;
+                    }
+                }));
                 let queList = yield Promise.all(queListPromises);
                 queList = queList.filter(ele => (!(ele === null)));
-                const questions = {};
                 queList.forEach(que => {
                     questions[que === null || que === void 0 ? void 0 : que._id.toString()] = que;
                 });

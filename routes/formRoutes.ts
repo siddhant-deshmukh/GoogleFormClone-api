@@ -24,7 +24,6 @@ router.post('/',
   check('questions.*.correct_ans.*.ans').optional().isString().isLength({min:3,max:50}),
   check('questions.*.point').optional().isInt({max:100,min:0}),
 
-  auth,
   (req: Request, res: Response, next: NextFunction)=>{
     const errors = validationResult(req)
     if(!errors.isEmpty()){
@@ -32,6 +31,7 @@ router.post('/',
     }
     next()
   },
+  auth,
   createNewForm
 );
 
@@ -55,7 +55,6 @@ router.put('/:formId',
   check('new_questions.*.correct_ans.*.ans').optional().isString().isLength({min:3,max:50}),
   check('new_questions.*.point').optional().isInt({max:100,min:0}),
 
-  auth,
   (req: Request, res: Response, next: NextFunction)=>{
     const errors = validationResult(req)
     if(!errors.isEmpty()){
@@ -63,6 +62,7 @@ router.put('/:formId',
     }
     next()
   },
+  auth,
   editForm
 );
 router.get('/:formId',
@@ -81,10 +81,17 @@ router.put('/:formId/q/:queId',
   body('ans_type').exists().isIn(['short_ans', 'long_ans', 'mcq', 'checkbox', 'dropdown', 'mcq_grid', 'checkboc_grid', 'range', 'date', 'time']),
   body('optionsArray').optional().isArray({max:20}),
   body('optionsArray.*.option').optional().isString().isLength({min:3,max:50}),
-  body('correct_ans').optional().isArray({max:20}),
+  body('correct_ans').optional().isArray({max:20}).custom((value : string[],{req,path})=>{
+    let optionsArray : string[] = req.body.optionsArray
+    if(!value.every(r => optionsArray.includes(r))){
+      throw new Error("Correct Ans don't match with optionsArray")
+    }else{
+      return value
+    }
+  }),
   body('correct_ans.*.ans').optional().isString().isLength({min:3,max:50}),
   body('point').optional().isInt({max:100,min:0}),
-  auth,
+  
   (req: Request, res: Response, next: NextFunction)=>{
     const errors = validationResult(req)
     if(!errors.isEmpty()){
@@ -92,6 +99,7 @@ router.put('/:formId/q/:queId',
     }
     next()
   },
+  auth,
   editQuestion
 );
 export default router
