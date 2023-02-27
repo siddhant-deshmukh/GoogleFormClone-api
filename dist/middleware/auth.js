@@ -41,6 +41,7 @@ const verifyToken = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
     try {
         const token = req.cookies.GoogleFormClone_acesstoken;
         // console.log("req.cookies.access_token",req.cookies.GoogleFormClone_acesstoken,process.env.TOKEN_KEY || 'zhingalala');
+        // console.log("Coming")
         if (!token) {
             return res.status(401).json({ err: "Not authorized!", user: null });
         }

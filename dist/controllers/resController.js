@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.newFormRes = void 0;
+exports.getFormRes = exports.newFormRes = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
 const form_1 = __importDefault(require("../models/form"));
 const question_1 = __importDefault(require("../models/question"));
@@ -138,3 +138,24 @@ function newFormRes(req, res) {
     });
 }
 exports.newFormRes = newFormRes;
+function getFormRes(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const { formId } = req.params;
+            const { _id: userId } = res.user;
+            console.log(formId, userId);
+            const oldRes = yield response_1.default.findOne({
+                formId,
+                userId
+            });
+            if (!oldRes) {
+                return res.status(201).json({ msg: 'Response doesnt exist' });
+            }
+            return res.status(201).json({ oldRes });
+        }
+        catch (err) {
+            return res.status(500).json({ msg: 'Some internal error occured', err });
+        }
+    });
+}
+exports.getFormRes = getFormRes;

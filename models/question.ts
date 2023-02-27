@@ -1,18 +1,20 @@
 import mongoose, { Date } from "mongoose";
 import { IMongooseObjectId } from "../types";
 
-export interface IQuestion {
-    formId: IMongooseObjectId,
+export interface IQuestion_b{
     required: boolean,
     title: string,
     desc?: string,
     ans_type: 'short_ans' | 'long_ans' | 'mcq' | 'checkbox' | 'dropdown' | 'mcq_grid' | 'checkboc_grid' | 'range' | 'date' | 'time',
     optionsArray?: string[],
-    point?:number 
+    point?:number,
+    correct_ans?: string[]
+}
+export interface IQuestion extends IQuestion_b{
+    formId: IMongooseObjectId,
 }
 export interface IQuestionStored extends IQuestion {
     _id : IMongooseObjectId,
-    correct_ans?: string[]
 }
 const questionSchema = new mongoose.Schema<IQuestionStored>({
     formId: {type: mongoose.SchemaTypes.ObjectId,required:true},

@@ -4,7 +4,7 @@ import { createNewForm, editForm, editQuestion, getForm, getQuestion } from '../
 var router = express.Router();
 import auth from '../middleware/auth'
 import Form, { IForm, IFormStored } from '../models/form';
-import Question, { IQuestion } from '../models/question';
+import Question, { IQuestion, IQuestion_b } from '../models/question';
 
 /* GET home page. */
 router.post('/',
@@ -12,17 +12,6 @@ router.post('/',
   body('desc').optional().isString().isLength({max:150}),
   body('starttime').optional().isDate(),
   body('endtime').optional().isDate(),
-  body('questions').optional().isArray({max:20}),
-
-  check('questions.*.required').isBoolean().exists(),
-  check('questions.*.title').isString().isLength({min:3,max:150}),
-  check('questions.*.desc').isString().optional().isLength({max:150}),
-  check('questions.*.ans_type').exists().isIn(['short_ans', 'long_ans', 'mcq', 'checkbox', 'dropdown', 'mcq_grid', 'checkboc_grid', 'range', 'date', 'time']),
-  check('questions.*.optionsArray').optional().isArray({max:20}),
-  check('questions.*.optionsArray.*.option').optional().isString().isLength({min:3,max:50}),
-  check('questions.*.correct_ans').optional().isArray({max:20}),
-  check('questions.*.correct_ans.*.ans').optional().isString().isLength({min:3,max:50}),
-  check('questions.*.point').optional().isInt({max:100,min:0}),
 
   (req: Request, res: Response, next: NextFunction)=>{
     const errors = validationResult(req)
@@ -40,20 +29,49 @@ router.put('/:formId',
   body('desc').optional().isString().isLength({max:150}),
   body('starttime').optional().isDate(),
   body('endtime').optional().isDate(),
-  
+
   body('questions').exists().isArray({max:20}),
   body('new_questions').exists().isArray({max:20}),
-  body('delete_questions').exists().isArray({max:20}),
+  // body('delete_questions').exists().isArray({max:20}),
   
-  check('new_questions.*.required').isBoolean().exists(),
-  check('new_questions.*.title').isString().isLength({min:3,max:150}),
-  check('new_questions.*.desc').isString().optional().isLength({max:150}),
-  check('new_questions.*.ans_type').exists().isIn(['short_ans', 'long_ans', 'mcq', 'checkbox', 'dropdown', 'mcq_grid', 'checkboc_grid', 'range', 'date', 'time']),
-  check('new_questions.*.optionsArray').optional().isArray({max:20}),
-  check('new_questions.*.optionsArray.*.option').optional().isString().isLength({min:3,max:50}),
-  check('new_questions.*.correct_ans').optional().isArray({max:20}),
-  check('new_questions.*.correct_ans.*.ans').optional().isString().isLength({min:3,max:50}),
-  check('new_questions.*.point').optional().isInt({max:100,min:0}),
+  body('new_questions.*.required').isBoolean().exists(),
+  body('new_questions.*.title').isString().isLength({min:3,max:150}),
+  body('new_questions.*.desc').isString().optional().isLength({max:150}),
+  body('new_questions.*.ans_type').exists().isIn(['short_ans', 'long_ans', 'mcq', 'checkbox', 'dropdown', 'mcq_grid', 'checkboc_grid', 'range', 'date', 'time']),
+  body('new_questions.*.optionsArray').optional().isArray({max:20,min:1}),
+  body('new_questions.*.optionsArray.*').optional().isString().isLength({min:1,max:50}),
+  body('new_questions.*.correct_ans').optional().isArray({max:20,min:1}),
+  body('new_questions.*.correct_ans.*').optional().isString().isLength({min:1,max:50}),
+  body('new_questions.*.point').optional().isInt({max:100,min:0}),
+
+  body('new_questions').custom((value : IQuestion_b[],{req,path})=>{
+    let check=true;
+    value.forEach((question)=>{
+      const { ans_type,optionsArray, correct_ans } = question
+      if(optionsArray && correct_ans && (ans_type==="checkbox" || ans_type==="mcq" || ans_type==="dropdown")){
+        if(!correct_ans.every(r => optionsArray.includes(r))){
+          check=false
+          throw new Error("Correct Ans don't match with optionsArray")
+        }
+      }else if(!optionsArray){
+        if(ans_type==="checkbox" || ans_type==="mcq" || ans_type==="dropdown"){
+          check=false;
+          throw new Error("Ans type demands an optionsArray")
+        }
+      }else if(optionsArray){
+        if(!(ans_type==="checkbox" || ans_type==="mcq" || ans_type==="dropdown")){
+          check=false;
+          throw new Error("Ans type don't need an optionsArray")
+        }
+      }
+    })
+    
+    if(!check){
+      throw new Error("Check the questions!")
+    }else{
+      return value
+    }
+  }),
 
   (req: Request, res: Response, next: NextFunction)=>{
     const errors = validationResult(req)
@@ -79,9 +97,9 @@ router.put('/:formId/q/:queId',
   body('title').isString().isLength({min:3,max:150}),
   body('desc').isString().optional().isLength({max:150}),
   body('ans_type').exists().isIn(['short_ans', 'long_ans', 'mcq', 'checkbox', 'dropdown', 'mcq_grid', 'checkboc_grid', 'range', 'date', 'time']),
-  body('optionsArray').optional().isArray({max:20}),
-  body('optionsArray.*.option').optional().isString().isLength({min:3,max:50}),
-  body('correct_ans').optional().isArray({max:20}).custom((value : string[],{req,path})=>{
+  body('optionsArray').optional().isArray({max:20,min:1}),
+  body('optionsArray.*').optional().isString().isLength({min:1,max:50}),
+  body('correct_ans').optional().isArray({max:20,min:1}).custom((value : string[],{req,path})=>{
     let optionsArray : string[] = req.body.optionsArray
     if(!value.every(r => optionsArray.includes(r))){
       throw new Error("Correct Ans don't match with optionsArray")
@@ -89,7 +107,7 @@ router.put('/:formId/q/:queId',
       return value
     }
   }),
-  body('correct_ans.*.ans').optional().isString().isLength({min:3,max:50}),
+  body('correct_ans.*').optional().isString().isLength({min:3,max:50}),
   body('point').optional().isInt({max:100,min:0}),
   
   (req: Request, res: Response, next: NextFunction)=>{
