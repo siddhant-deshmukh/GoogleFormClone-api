@@ -143,7 +143,7 @@ function getFormRes(req, res) {
         try {
             const { formId } = req.params;
             const { _id: userId } = res.user;
-            console.log(formId, userId);
+            // console.log(formId,userId)
             const oldRes = yield response_1.default.findOne({
                 formId,
                 userId
